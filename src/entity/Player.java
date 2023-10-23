@@ -2,6 +2,7 @@ package entity;
 
 import main.GamePanel;
 import main.KeyHandler;
+import main.UtilityTool;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -13,7 +14,7 @@ public class Player extends Entity{
     KeyHandler keyH;
     public final int screenX;
     public final int screenY;
-    int hashKey = 0;
+    public int hashKey = 0;
 
     public Player(GamePanel gp, KeyHandler keyH) {
         this.gp = gp;
@@ -40,18 +41,25 @@ public class Player extends Entity{
         direction = "down";
     }
     public void getPlayerImage(){
+        up1 = setup("boy_up_1");
+        up2 = setup("boy_up_2");
+        down1 = setup("boy_down_1");
+        down2 = setup("boy_down_1");
+        left1 = setup("boy_left_1");
+        left2 = setup("boy_left_1");
+        right1 = setup("boy_right_1");
+        right2 = setup("boy_right_1");
+    }
+    public BufferedImage setup(String imageName){
+        UtilityTool uTool = new UtilityTool();
+        BufferedImage image = null;
         try {
-            up1 = ImageIO.read(getClass().getResourceAsStream("/resources/player/boy_up_1.png"));
-            up2 = ImageIO.read(getClass().getResourceAsStream("/resources/player/boy_up_2.png"));
-            down1 = ImageIO.read(getClass().getResourceAsStream("/resources/player/boy_down_1.png"));
-            down2 = ImageIO.read(getClass().getResourceAsStream("/resources/player/boy_down_2.png"));
-            left1 = ImageIO.read(getClass().getResourceAsStream("/resources/player/boy_left_1.png"));
-            left2 = ImageIO.read(getClass().getResourceAsStream("/resources/player/boy_left_2.png"));
-            right1 = ImageIO.read(getClass().getResourceAsStream("/resources/player/boy_right_1.png"));
-            right2 = ImageIO.read(getClass().getResourceAsStream("/resources/player/boy_right_2.png"));
-        }catch (IOException e){
+            image = ImageIO.read(getClass().getResourceAsStream("/resources/player/" + imageName + ".png"));
+            image = uTool.scaleImage(image, gp.tileSize, gp.tileSize);
+        } catch (IOException e){
             e.printStackTrace();
         }
+        return image;
     }
     public void update(){
         if (keyH.upPressed == true || keyH.downPressed == true || keyH.leftPressed == true || keyH.rightPressed == true){
@@ -89,6 +97,8 @@ public class Player extends Entity{
                         worldX += speed;
                         break;
                 }
+            } else {
+                gp.playSE(5);
             }
             spriteCounter ++;
             if (spriteCounter > 12){
@@ -107,19 +117,33 @@ public class Player extends Entity{
             String objectName = gp.obj[i].name;
             switch (objectName){
                 case "Clé":
+                    gp.playSE(1);
                     hashKey++;
                     gp.obj[i] = null;
-                    System.out.println("Clé : " + hashKey);
+                    gp.ui.showMessage("Vous collectez une clé !");
                     break;
                 case "Porte":
                     if(hashKey > 0){
+                        gp.playSE(3);
                         gp.obj[i] = null;
                         hashKey --;
-                        System.out.println("Clé : " + hashKey);
+                        gp.ui.showMessage("La porte s'ouvre !");
+                    } else {
+                        gp.ui.showMessage("Vous avez besoin d'une clé");
                     }
                     break;
+                case "Bottes":
+                    gp.playSE(2);
+                    speed += 1;
+                    gp.obj[i] = null;
+                    gp.ui.showMessage("Super boost !");
+                    break;
+                case "Coffre":
+                    gp.ui.gameFinished = true;
+                    gp.stopMusic();
+                    gp.playSE(4);
+                    break;
             }
-
         }
     }
     public void draw(Graphics2D g2){
@@ -158,7 +182,7 @@ public class Player extends Entity{
                 }
                 break;
         }
-        g2.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
+        g2.drawImage(image, screenX, screenY, null);
 //        g2.setColor(Color.white);
 //        g2.fillRect(x, y, gp.tileSize, gp.tileSize);
     }
